@@ -6,21 +6,6 @@
 
 static InterfaceTable *ft;
 
-static void normalize_samples(int size, float* data, float peak)
-{
-	float maxamp = 0.f;
-	for (int i=0; i<size; ++i) {
-		float absamp = std::abs(data[i]);
-		if (absamp > maxamp) maxamp = absamp;
-	}
-	if (maxamp != 0.f && maxamp != peak) {
-		float ampfac = peak / maxamp;
-		for (int i=0; i<size; ++i) {
-			data[i] *= ampfac;
-		}
-	}
-}
-
 void BufRev(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
 {
 	float newmax;
@@ -31,7 +16,10 @@ void BufRev(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
 	}
 	float *data = buf->data;
 	int size = buf->samples;
-	normalize_samples(size, data, newmax);
+  int chans = buf->channels;
+  int frames = buf->frames;
+
+  Print("size = %d\nchans = %d\nframes = %d\n",size,chans,frames);
 }
 
 PluginLoad(BufRevUGens) {
