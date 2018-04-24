@@ -8,12 +8,13 @@ static InterfaceTable *ft;
 
 void BufRev(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
 {
-	float newmax;
-	if(msg->remain() != 0){
-		newmax = msg->getf();
-	}else{
-		newmax = 1.f;
-	}
+  float32 arg1 = msg->getf(11);
+  float32 arg2 = msg->getf(22);
+  float32 arg3 = msg->getf(33);
+  float32 arg4 = msg->getf(44);
+
+	Print("%f\n%f\n%f\n%f\n", arg1,arg2,arg3,arg4);
+
 	float *data = buf->data;
 	int size = buf->samples;
   int chans = buf->channels;
