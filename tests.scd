@@ -38,3 +38,64 @@ d.reverse
 ////////////////////////////////////////////////////////////
 // trying audio
 
+b=Buffer.read(s,Platform.resourceDir +/+ "sounds/a11wlk01.wav")
+b.play(true, 0.1)
+
+b.reverse
+
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+s.quit
+s.boot
+// allocates a 16-sample buffer and fills it with ascending values
+b = Buffer.alloc(s,16);
+b.setn(0, Array.series(16,0,1));
+
+// read to check
+b.getn(0,16, {|msg| msg.postln});
+
+// apply the NRT method with default values
+b.chunkSwap
+
+// read to check
+b.getn(0,16, {|msg| msg.postln});
+
+// apply the NRT method with default values
+b.chunkSwap(3,7,3)
+
+// read to check
+b.getn(0,16, {|msg| msg.postln});
+
+// reset
+b.setn(0, Array.series(16,0,1));
+
+// read to check
+b.getn(0,16, {|msg| msg.postln});
+
+// apply
+b.chunkSwap(3,11,-3)
+
+// read to check
+b.getn(0,16, {|msg| msg.postln});
+
+////////////////////////////////////////////////////////////
+// trying 3 channels
+c = Buffer.alloc(s,15,3)
+c.setn(0,Array.series(45,0,1))
+c.getn(0,45, {|m| m.postln});
+c.chunkSwap
+c.getn(0,45, {|m| m.postln});
+
+c.setn(0,Array.series(45,0,1))
+c.getn(0,45, {|m| m.postln});
+c.chunkSwap(3,7,3)
+c.getn(0,45, {|m| m.postln});
+
+c.setn(0,Array.series(45,0,1))
+c.getn(0,45, {|m| m.postln});
+c.chunkSwap(3,11,-3)
+c.getn(0,45, {|m| m.postln});
+
+////////////////////////////////////////////////////////////
+b.chunkSwap(b.numFrames.rand,b.numFrames.rand,b.numFrames.rand)
