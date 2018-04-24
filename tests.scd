@@ -1,12 +1,14 @@
-s.reboot
+s.quit
+s.boot
 // allocates a 16-sample buffer and fills it with small random values
 b = Buffer.alloc(s,16);
-c = Buffer.alloc(s,123456789,17);
+c = Buffer.alloc(s,44100,9);
 
 // apply the NRT method (checking buf variables for now)
 b.reverse
 c.reverse
 
-b.reverse(5,6,7,8)
+b.reverse(5,6.1,"trauma")
 
-c.reverse(12,13,14,15)
+//check for erronous types
+c.reverse(12.1,13,4)

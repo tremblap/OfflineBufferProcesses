@@ -8,12 +8,11 @@ static InterfaceTable *ft;
 
 void BufRev(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
 {
-  float32 arg1 = msg->getf(11);
+  int arg1 = msg->getf(11);
   float32 arg2 = msg->getf(22);
-  float32 arg3 = msg->getf(33);
-  float32 arg4 = msg->getf(44);
+  const char* arg3 = msg->gets("what");
 
-	Print("%f\n%f\n%f\n%f\n", arg1,arg2,arg3,arg4);
+	Print("%i\n%f\n%s\n", arg1,arg2,arg3);
 
 	float *data = buf->data;
 	int size = buf->samples;
