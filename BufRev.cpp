@@ -8,18 +8,26 @@ static InterfaceTable *ft;
 
 void BufRev(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
 {
-  int arg1 = msg->getf(11);
-  float32 arg2 = msg->getf(22);
-  const char* arg3 = msg->gets("what");
-
-	Print("%i\n%f\n%s\n", arg1,arg2,arg3);
-
 	float *data = buf->data;
-	int size = buf->samples;
+  int size = buf->samples;
   int chans = buf->channels;
   int frames = buf->frames;
+  int halfframe = frames/2;
+  float temp;
+  int loadd,hiadd;
 
-  Print("size = %d\nchans = %d\nframes = %d\n",size,chans,frames);
+  // Print("size = %d\nchans = %d\nframes = %d\nhalfframe = %d\n",size,chans,frames,halfframe);
+
+  for (int i = 0; i < halfframe; ++i) {
+    for (int j = 0; j < chans; ++j) {
+      hiadd = j+size-((i+1)*chans);
+      loadd = j+(i*chans);
+      // Print("%d %d %d %d\n", i, j, hiadd, loadd);
+      temp = data[hiadd];
+      data[hiadd] = data[loadd];
+      data[loadd] = temp;
+    }
+  }
 }
 
 PluginLoad(BufRevUGens) {
