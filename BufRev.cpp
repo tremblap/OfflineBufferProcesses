@@ -45,13 +45,12 @@ void chunkSwap(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
   if (numFrames == 0)
     numFrames = (frames * -1) / 2;
 
-  // define end writing frames
+  // define end writing frames (inclusive) and the incrementor value
   int AbsNumFrames = std::abs(numFrames);
-  int srcStopAt = srcStartAt + AbsNumFrames;
-  int dstStopAt = dstStartAt + numFrames;
-  // Print("size = %d\nchans = %d\nframes = %d\nnumFrames = %d\nAbsNumFrames = %d\n",size,chans,frames,numFrames,AbsNumFrames);
-  // Print("srcStartAt = %d\nsrcStopAt = %d\ndstStartAt = %d\ndstStopAt = %d\n",srcStartAt,srcStopAt,dstStartAt,dstStopAt);
-  // check the boundaries
+	int dstStep = numFrames == AbsNumFrames ? 1 : -1;
+  int srcStopAt = srcStartAt + AbsNumFrames - 1;
+  int dstStopAt = dstStartAt + numFrames - dstStep;
+
   if (srcStartAt < 0 || srcStartAt >= frames) {
     Print("chunkSwap is not happy because the source starting is outside the buffer.\n");
     return;
@@ -69,11 +68,10 @@ void chunkSwap(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
     return;
   }
 
-  int dstStep = numFrames == AbsNumFrames ? 1 : -1;
   float temp;
   int srcAdd,dstAdd;
 
-  for (int i = srcStartAt; i < srcStopAt; ++i) {
+  for (int i = srcStartAt; i <= srcStopAt; ++i) {
     for (int j = 0; j < chans; ++j) {
       dstAdd = j+(dstStartAt*chans);
       srcAdd = j+(i*chans);

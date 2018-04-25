@@ -61,6 +61,9 @@ b.chunkSwap
 // read to check
 b.getn(0,16, {|msg| msg.postln});
 
+// apply on full range = changes nothing!
+b.chunkSwap(0,b.numFrames-1,(b.numFrames * -1))
+
 // apply the NRT method with default values
 b.chunkSwap(3,7,3)
 
@@ -98,4 +101,9 @@ c.chunkSwap(3,11,-3)
 c.getn(0,45, {|m| m.postln});
 
 ////////////////////////////////////////////////////////////
-b.chunkSwap(b.numFrames.rand,b.numFrames.rand,b.numFrames.rand)
+1000.do({b.chunkSwap(b.numFrames.rand,b.numFrames.rand,(b.numFrames.rand-(b.numFrames/2)));})
+
+
+b=Buffer.read(s,"/Volumes/machins/projets/Lucilin/sons/descente-complexe/Audio/01-180205_2135.wav")
+b.play(true, 0.1)
+b.reverse
