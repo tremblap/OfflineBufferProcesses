@@ -113,51 +113,17 @@ b.reverse
 ////////////////////////////////////////////////////////////
 //temp files version
 
-s.boot;
-(
-v = Signal.sineFill(128, 1.0/[1,2,3,4,5,6]);
-b = Buffer.alloc(s, 128);
-)
-(
-b.loadCollection(v, action: {|buf|
-    x = { PlayBuf.ar(buf.numChannels, buf, BufRateScale.kr(buf), loop: 1)
-        * 0.2 }.play;
+// sets known values
+b = Buffer.alloc(s,16);
+b.setn(0, Array.series(16,1,1));
+
+b.loadToFloatArray(action: {
+	arg array;
+	array.postln;
+	x = array.reverse;
+	x.postln;
+	b.loadCollection(x);
 });
-)
-x.free; b.free;
 
-// interleave a multi-dimensional array
-(
-l = Signal.sineFill(16384, [0 0 0 0 0 0 0 0 1]);
-r = Array.fill(16384, {1.0.rand2});
-m = [Array.newFrom(l), r]; // a multi-dimensional array
-m = m.lace(32768); // interleave the two collections
-b = Buffer.alloc(s, 16384, 2);
-)
-
-l.plot
-
-(
-b.loadCollection(m, 0, {|buf|
-    x = { PlayBuf.ar(2, buf, BufRateScale.kr(buf), loop: 1) * 0.5 }.play;
-});
-)
-b.plot;
-x.free; b.free;
-
-//then;
-b = Buffer.read(s, Platform.resourceDir +/+ "sounds/a11wlk01.wav");
-b.loadToFloatArray(action: { arg array; a = array; {a.plot;}.defer; "done".postln;});
-b.free;
-
-
-//re-read Collins chapter inSC book (p.439)
-
-//p 733-737 in the book speak of the NRT thread (double buffer map!)
-
-//3 methods -
-// 1) osc/file transfer to language with language processing (loadCollection  and loadToFloatArray )
-// 2) osc/file transfer to class processing (faster?)
-// 3) osc/file transfer to external terminal process
-// 4) server NRT plugin
+b.getn(0,16, {|msg| msg.postln});
 
