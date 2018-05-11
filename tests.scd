@@ -106,7 +106,7 @@ c.getn(0,45, {|m| m.postln});
 1000.do({b.chunkSwap(b.numFrames.rand,b.numFrames.rand,(b.numFrames.rand-(b.numFrames/2)));})
 
 
-b=Buffer.read(s,"/Volumes/machins/projets/Lucilin/sons/descente-complexe/Audio/01-180205_2135.wav")
+b=Buffer.read(s,"/Volumes/trucs/archive - pièces PA/asinglewordisnotenough3(invariant).wav")
 b.play(true, 0.1)
 b.reverse
 
@@ -127,3 +127,6 @@ b.loadToFloatArray(action: {
 
 b.getn(0,16, {|msg| msg.postln});
 
+
+b = Buffer.read(s,"/Volumes/machins/--à archiver/démarche/BEAST-HOA+cheat/bounces/montage-17.wav")
+b.read("/Volumes/machins/--à archiver/démarche/BEAST-HOA+cheat/bounces/montage-17.wav",0,926100000

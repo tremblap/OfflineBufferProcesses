@@ -84,9 +84,52 @@ void chunkSwap(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
   }
 }
 
+void waveSetCopyTo(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
+{
+	int frames1 = buf->frames;
+	int channels1 = buf->channels;
+
+	uint32 bufnum2 = msg->geti();
+	int repetitions = msg->geti();
+
+	if (bufnum2 >= world->mNumSndBufs){
+		Print("waveSetCopyTo is not happy because the source buffer does not exist.\n");
+		return;
+	}
+
+	SndBuf* buf2 = world->mSndBufs + bufnum2;
+
+	if (buf2->data == buf->data){
+		Print("waveSetCopyTo is not happy because the source buffer is the same as the destination buffer.\n");
+		return;
+	}
+
+	int frames2 = buf2->frames;
+	int channels2 = buf2->channels;
+
+	if (channels1 != channels2) {
+		Print("waveSetCopyTo is not happy because the source buffer has a different channel count than the destination buffer.\n");
+		return;
+	}
+
+
+	long fromPos = 0;
+	long toPos = 0;
+
+	int length = sc_min(frames2, frames1);
+
+	if (length <= 0) return;
+
+	int numbytes = length * sizeof(float) * channels1;
+	float *data1 = buf->data + toPos * channels1;
+	float *data2 = buf2->data + fromPos * channels2;
+
+	memcpy(data1, data2, numbytes);
+}
 
 PluginLoad(BufRevUGens) {
   ft = inTable;
   DefineBufGen("reverse", BufRev);
   DefineBufGen("chunkSwap", chunkSwap);
+	DefineBufGen("waveSetCopyTo", waveSetCopyTo);
 }
