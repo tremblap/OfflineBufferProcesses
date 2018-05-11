@@ -16,9 +16,9 @@ b.waveSetCopyTo(c)
 // read to check
 c.getn(0,16, {|msg| msg.postln});
 
-// flip again
-b.reverse
-
-// read to check
-b.getn(0,16, {|msg| msg.postln});
+// check exceptions
+b.waveSetCopyTo(b)
+d = Buffer.alloc(s,16,2);
+b.waveSetCopyTo(d)
+b.waveSetCopyTo(e)
 
