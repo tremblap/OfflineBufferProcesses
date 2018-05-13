@@ -27,6 +27,28 @@ void BufRev(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
 	}
 }
 
+void removeDC(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
+{
+	float *data = buf->data;
+	int chans = buf->channels;
+	int frames = buf->frames;
+	float coeff = msg->getf(0.995);
+	float previn, in;
+	double prevout, out;
+
+	for (int j = 0; j < chans; ++j) {
+		previn = data[j];
+		prevout = previn;
+		for (int i = 1; i < frames; ++i) {
+			in = data[(i*chans)+j];
+			out = in - previn + 0.995 * prevout;
+			data[(i*chans)+j] = out;
+			prevout = out;
+			previn = in;
+		}
+	}
+}
+
 void chunkSwap(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
 {
 	float *data = buf->data;
@@ -152,5 +174,6 @@ PluginLoad(BufRevUGens) {
 	ft = inTable;
 	DefineBufGen("reverse", BufRev);
 	DefineBufGen("chunkSwap", chunkSwap);
+	DefineBufGen("removeDC", removeDC);
 	DefineBufGen("waveSetCopyTo", waveSetCopyTo);
 }

@@ -1,14 +1,3 @@
-//address tests
-b = Buffer.alloc(s,30*60*44100,32)
-r = Array.fill(1638400, {1.0.rand2});
-b.loadCollection(r,25*60*44100)
-
-
-2540160000 samples
-2116800000
-423360000
-
-//
 s.quit
 s.boot
 // allocates a 16-sample buffer and fills it with ascending values
@@ -33,7 +22,7 @@ d = Buffer.alloc(s,16,2);
 b.waveSetCopyTo(d)
 b.waveSetCopyTo(e)
 
-b = Buffer.alloc(s,256);
+b = Buffer.alloc(s,4096);
 c = Buffer.alloc(s,256);
 b.sine1([0,0,0,1],true,false);
 b.waveSetCopyTo(c)
@@ -53,3 +42,13 @@ c.zero;
 b.waveSetCopyTo(c)
 
 b.plot;c.plot
+
+/////////////////////////////////////
+b = Buffer.alloc(s,4096);
+b.setn(0, Array.fill(64,{1.0.rand2}).round(0.1).stutter(64));
+b.removeDC(0.1)
+
+/////////////////////////////////////
+b = Buffer.alloc(s,44100);
+b.sine1(Array.fill(100,{|i| ((i+1)%2)/(i+1)}),true,false)
+

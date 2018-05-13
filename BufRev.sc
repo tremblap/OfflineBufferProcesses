@@ -8,6 +8,10 @@
 		if(bufnum.isNil) { Error("Cannot call % on a % that has been freed".format(thisMethod.name, this.class.name)).throw };
 		server.listSendMsg([\b_gen, bufnum, "chunkSwap", srcStartAt, dstStartAt, numFrames])
 	}
+	removeDC { arg coefficient = 0.995;
+		if(bufnum.isNil) { Error("Cannot call % on a % that has been freed".format(thisMethod.name, this.class.name)).throw };
+		server.listSendMsg([\b_gen, bufnum, "removeDC", coefficient])
+	}
 	waveSetCopyTo { arg dstBuf, repetitions = 0;
 		if(bufnum.isNil) { Error("Cannot call % on a % that has been freed".format(thisMethod.name, this.class.name)).throw };
 		server.listSendMsg([\b_gen, dstBuf.bufnum, "waveSetCopyTo", bufnum, repetitions])
