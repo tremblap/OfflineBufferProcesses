@@ -37,7 +37,7 @@ void BufGain(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
 	data[i] *= gain;
 }
 
-void removeDC(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
+void BufRemoveDC(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
 {
 	float *data = buf->data;
 	int chans = buf->channels;
@@ -59,7 +59,7 @@ void removeDC(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
 	}
 }
 
-void chunkSwap(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
+void BufChunkSwap(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
 {
 	float *data = buf->data;
 	int chans = buf->channels;
@@ -115,7 +115,7 @@ void chunkSwap(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
 	}
 }
 
-void waveSetCopyTo(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
+void BufWaveSetCopyTo(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
 {
 	int frames1 = buf->frames;
 	int channels1 = buf->channels;
@@ -197,11 +197,11 @@ void waveSetCopyTo(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
 	}
 }
 
-PluginLoad(BufRevUGens) {
+PluginLoad(OfflineBufferProcessesUGens) {
 	ft = inTable;
 	DefineBufGen("reverse", BufRev);
 	DefineBufGen("gain", BufGain);
-	DefineBufGen("chunkSwap", chunkSwap);
-	DefineBufGen("removeDC", removeDC);
-	DefineBufGen("waveSetCopyTo", waveSetCopyTo);
+	DefineBufGen("chunkSwap", BufChunkSwap);
+	DefineBufGen("removeDC", BufRemoveDC);
+	DefineBufGen("waveSetCopyTo", BufWaveSetCopyTo);
 }

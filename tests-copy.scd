@@ -75,6 +75,6 @@ b.waveSetCopyTo(c,3);
 //fun audio example 2 - drum stretch
 d = Buffer.read(s,"/Volumes/machins/professionnel/sons/boucle A(lent)/loopC.aif")
 d.play
-e = Buffer.alloc(s,d.numFrames*21,d.numChannels)
-d.waveSetCopyTo(e,21)
+e = Buffer.alloc(s,d.numFrames*17,d.numChannels)
+d.waveSetCopyTo(e,17)
 e.play
