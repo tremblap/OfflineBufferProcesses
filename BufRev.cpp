@@ -34,7 +34,7 @@ void BufGain(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
 	float gain = msg->getf(-1.0);
 
 	for (int i = 0; i < size; ++i)
-			data[i] *= gain;
+	data[i] *= gain;
 }
 
 void removeDC(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
@@ -143,40 +143,56 @@ void waveSetCopyTo(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
 		return;
 	}
 
-	if (repetitions < 1)
-	repetitions = int(frames1 / frames2);
-	//check if it is at least once
-
+	// checks if default value (0) or error in quantity and sets to a filling behaviour or at least one
+	if (repetitions < 1){
+		repetitions = int(frames1 / frames2);
+		if (repetitions < 1)
+		repetitions = 1;
+	}
 
 	//for each channels
 	for (int j=0;j<channels2;j++){
-		long lastXadd = -1; //set start frame address as last ascending zero crossing
-		short prevpol = (buf2->data[j] > 0); //set previous sample polarity as the first sample
+		long lastXadd = -1; //set start frame as invalid address flag
+		short prevpol = (buf2->data[j] > 0); //set the previous sample polarity as the first sample
 		long writeindex = 0; // set the writing index at the start of the buffer
+		long wavesetlenght;
+
 		//interates through the source samples
 		for (int i=0;i<frames2;i++){
+			//if previously positive...
 			if (prevpol){
 				// Print("in1\n");
+				//... and currently negative ...
 				if (buf2->data[(i*channels2)+j] < 0.0) {
 					// Print("in1-1\n");
+					// ... flag as being now in negativeland and exit.
 					prevpol = 0;
 				}
 			} else {
+				// if previously in negativeland...
 				// Print("in2\n");
 				if (buf2->data[(i*channels2)+j] >= 0.0) {
+					// ...and now being zero or up, so we write
 					// Print("in2-2\n");
-					prevpol = 1;
-					//check if the lenght will be too long
-					// then write
-					if (i < frames2 && lastXadd >= 0){
-						buf->data[(lastXadd*channels2)+j] = 1.0;
+					// check it is not the first zero crossing
+					if (lastXadd >=0) {
+						// check if the lenght will be too long for all repetitions
+						wavesetlenght = i - lastXadd;
+						if (((wavesetlenght*repetitions)+ writeindex) > frames1) break;
+
+						// write if enough place
+						for (int k = 0; k < repetitions; k++){
+							for (int l = 0; l < wavesetlenght; l++) {
+								buf->data[(writeindex*channels2)+j] = buf2->data[((lastXadd+l)*channels2)+j];
+								writeindex++;
+							}
+						}
 					}
+					// setting the flag and the new past
+					prevpol = 1;
 					lastXadd = i;
 				}
 			}
-		}
-		if (lastXadd < frames2 && lastXadd >= 0){
-			buf->data[(lastXadd*channels2)+j] = 1.0;
 		}
 	}
 }

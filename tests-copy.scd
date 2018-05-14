@@ -22,7 +22,7 @@ d = Buffer.alloc(s,16,2);
 b.waveSetCopyTo(d)
 b.waveSetCopyTo(e)
 
-b = Buffer.alloc(s,4096);
+b = Buffer.alloc(s,256);
 c = Buffer.alloc(s,256);
 b.sine1([0,0,0,1],true,false);
 b.waveSetCopyTo(c)
@@ -43,12 +43,23 @@ b.waveSetCopyTo(c)
 
 b.plot;c.plot
 
-/////////////////////////////////////
-b = Buffer.alloc(s,4096);
-b.setn(0, Array.fill(64,{1.0.rand2}).round(0.1).stutter(64));
-b.removeDC(0.1)
 
 /////////////////////////////////////
-b = Buffer.alloc(s,44100);
-b.sine1(Array.fill(100,{|i| ((i+1)%2)/(i+1)}),true,false)
+// copying a sine as many time it can (one cycle does not cross zero twice !)
+b = Buffer.alloc(s,256);
+c = Buffer.alloc(s,1000);
+b.sine1([1],true,false);
+b.waveSetCopyTo(c)
+b.plot;c.plot
 
+// copying a sine as many time it can (one cycle does not cross zero twice !)
+b.sine2([1.1],[1],true,false);
+b.waveSetCopyTo(c)
+b.plot;c.plot
+b.getn(230,26,{|i| i.postln})
+c.getn(230,26,{|i| i.postln})
+b.getn(0,26,{|i| i.postln})
+c.getn(0,26,{|i| i.postln})
+
+c.zero
+b.waveSetCopyTo(c,1)
