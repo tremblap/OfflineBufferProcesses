@@ -62,4 +62,19 @@ b.getn(0,26,{|i| i.postln})
 c.getn(0,26,{|i| i.postln})
 
 c.zero
-b.waveSetCopyTo(c,1)
+b.waveSetCopyTo(c,2)
+
+
+//fun audio example 1 - FOF-ish
+c.play(loop:true)
+(
+c.zero;
+b.waveSetCopyTo(c,3);
+)
+
+//fun audio example 2 - drum stretch
+d = Buffer.read(s,"/Volumes/machins/professionnel/sons/boucle A(lent)/loopC.aif")
+d.play
+e = Buffer.alloc(s,d.numFrames*21,d.numChannels)
+d.waveSetCopyTo(e,21)
+e.play
