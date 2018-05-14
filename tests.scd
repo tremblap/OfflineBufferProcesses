@@ -9,7 +9,7 @@ b.getn(0,16, {|msg| msg.postln});
 
 // apply the NRT method
 b.reverse
-
+b.gain(0.1)
 // read to check
 b.getn(0,16, {|msg| msg.postln});
 

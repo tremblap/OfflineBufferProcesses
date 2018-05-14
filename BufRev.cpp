@@ -27,6 +27,16 @@ void BufRev(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
 	}
 }
 
+void BufGain(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
+{
+	float *data = buf->data;
+	int size = buf->samples;
+	float gain = msg->getf(-1.0);
+
+	for (int i = 0; i < size; ++i)
+			data[i] *= gain;
+}
+
 void removeDC(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
 {
 	float *data = buf->data;
@@ -170,9 +180,11 @@ void waveSetCopyTo(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
 		}
 	}
 }
+
 PluginLoad(BufRevUGens) {
 	ft = inTable;
 	DefineBufGen("reverse", BufRev);
+	DefineBufGen("gain", BufGain);
 	DefineBufGen("chunkSwap", chunkSwap);
 	DefineBufGen("removeDC", removeDC);
 	DefineBufGen("waveSetCopyTo", waveSetCopyTo);
