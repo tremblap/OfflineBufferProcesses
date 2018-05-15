@@ -7,49 +7,63 @@ b.setn(0, Array.series(16,1,1));
 // read to check
 b.getn(0,16, {|msg| msg.postln});
 
-// apply the NRT method
+// apply gain
+b.mul(-0.1)
+// read to check (and appreciate the imprecision of 32bit float
+b.getn(0,16, {|msg| msg.postln});
+
+// apply reverse
 b.reverse
-b.gain(0.1)
 // read to check
 b.getn(0,16, {|msg| msg.postln});
 
-// flip again
-b.reverse
-
+// apply reverse
+b.add(3.5)
 // read to check
 b.getn(0,16, {|msg| msg.postln});
 
-
 ////////////////////////////////////////////////////////////
-// trying stereo
-c = Buffer.alloc(s,16,2)
-c.setn(0,Array.series(32,1,1))
-c.getn(0,32, {|m| m.postln});
-c.reverse
-c.getn(0,32, {|m| m.postln});
-
-
-////////////////////////////////////////////////////////////
-// trying odd numbers
+// trying odd numbers of addresses, and odd number of samples
 d = Buffer.alloc(s,15,3)
 d.setn(0,Array.series(45,1,1))
 d.getn(0,45, {|m| m.postln});
+
+// reverse and observe the interleaved channels stay in line
 d.reverse
 d.getn(0,45, {|m| m.postln});
 
 ////////////////////////////////////////////////////////////
 // trying audio
 
+// load your favourite sound
 b=Buffer.read(s,Platform.resourceDir +/+ "sounds/a11wlk01.wav")
+// play it not too loud
 b.play(true, 0.1)
 
+// reverse it. there is a click when the buffer is updated
 b.reverse
 
+// stop
+b.free
+
+///////////////////////////////////////////////////////////
+// adding dc offset
+
+//load a file
+b=Buffer.read(s,Platform.resourceDir +/+ "sounds/a11wlk01.wav")
+
+// add DC for testing purpose
+b.add(0.1)
+// play and plot (nasty tick at the end)
+b.play; b.plot
+
+// remove DC
+b.removeDC
+// play and plot (nasty tick at the end)
+b.play; b.plot
+
 ////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////
-s.quit
-s.boot
+// chunk swapping
 // allocates a 16-sample buffer and fills it with ascending values
 b = Buffer.alloc(s,16);
 b.setn(0, Array.series(16,0,1));
@@ -57,7 +71,7 @@ b.setn(0, Array.series(16,0,1));
 // read to check
 b.getn(0,16, {|msg| msg.postln});
 
-// apply the NRT method with default values
+// apply chunkSwap method with default values (same as reverse)
 b.chunkSwap
 
 // read to check
@@ -66,99 +80,66 @@ b.getn(0,16, {|msg| msg.postln});
 // apply on full range = changes nothing!
 b.chunkSwap(0,b.numFrames-1,(b.numFrames * -1))
 
-// apply the NRT method with default values
+// read to check - tada!
+b.getn(0,16, {|msg| msg.postln});
+
+// reset to ascending values
+b.setn(0, Array.series(16,0,1));
+
+// apply with other values - indices are counting from 0
 b.chunkSwap(3,7,3)
 
 // read to check
 b.getn(0,16, {|msg| msg.postln});
 
-// reset
+// reset to ascending values
 b.setn(0, Array.series(16,0,1));
 
-// read to check
-b.getn(0,16, {|msg| msg.postln});
-
-// apply
+// apply with negative quantities (will read backwards and write frontwards)
 b.chunkSwap(3,11,-3)
 
-// read to check
+// read to check (and meditate on the result)
 b.getn(0,16, {|msg| msg.postln});
 
-////////////////////////////////////////////////////////////
-// trying 3 channels
+// trying odd channel count.
 c = Buffer.alloc(s,15,3)
 c.setn(0,Array.series(45,0,1))
 c.getn(0,45, {|m| m.postln});
-c.chunkSwap
-c.getn(0,45, {|m| m.postln});
 
-c.setn(0,Array.series(45,0,1))
-c.getn(0,45, {|m| m.postln});
+// same as the mono example, respecting the interleaved channels
 c.chunkSwap(3,7,3)
 c.getn(0,45, {|m| m.postln});
 
+// reset
 c.setn(0,Array.series(45,0,1))
-c.getn(0,45, {|m| m.postln});
+
+// same as the reverse mono example
 c.chunkSwap(3,11,-3)
 c.getn(0,45, {|m| m.postln});
 
 ////////////////////////////////////////////////////////////
 // test in benchmarking
-1000.do({b.chunkSwap(b.numFrames.rand,b.numFrames.rand,(b.numFrames.rand-(b.numFrames/2)));})
-b.free
-
-b=Buffer.read(s,"/Volumes/trucs/archive - pièces PA/asinglewordisnotenough3(invariant).wav")
-b.play(true, 0.1)
-b.reverse
-
-
-Task.new({
-d = Main.elapsedTime;
-0.01.wait;
-50.do({b.reverse});
-}).play
-(c-d).postln
-
-
+b=Buffer.read(s,Platform.resourceDir +/+ "sounds/a11wlk01.wav")
+b.play(loop:true)
 
 (
 f = { |msg, time, replyAddr, recvPort|
 	    if(msg[0] == '/done') {
-		// "time done %s\n".postf( time, msg, replyAddr, recvPort )
 		c = time;
     }
 };
 thisProcess.addOSCRecvFunc(f);
 d = Main.elapsedTime;
-45.do({b.reverse});
+100.do({b.reverse});
 )
 
-(c-d).postln
-
-// stop posting.
+(
 thisProcess.removeOSCRecvFunc(f);
-
+(c-d);
+)
 
 ////////////////////////////////////////////////////////////
 //temp files version
-Buffer.freeAll
-// sets known values
-
-b = Buffer.alloc(s,16);
-b.setn(0, Array.series(16,1,1));
-b.getn(0,16, {|msg| msg.postln});
-
-b.loadToFloatArray(action: {
-	arg array;
-	b.loadCollection(array.reverse);
-});
-
-b.getn(0,16, {|msg| msg.postln});
-
-/////
-b=Buffer.read(s,"/Volumes/machins/professionnel/sons/boucle A(lent)/loopC.aif")
-b=Buffer.read(s,"/Volumes/trucs/archive - pièces PA/asinglewordisnotenough3(invariant).wav")
-b.play(true, 0.1)
 
 (
 d = Main.elapsedTime;
@@ -167,16 +148,15 @@ b.loadToFloatArray(action: {
 	b.loadCollection(array.reverse, action:{c = Main.elapsedTime;});
 });
 )
-
+(c-d);
 ////////////////////////////
 // via osc (too slow for big file)
 (
 d = Main.elapsedTime;
-b.getToFloatArray(wait:1, timeout:30, action:{
+b.getToFloatArray(action:{
 	arg array;
 	array.postln;
-	// b.sendCollection(array.reverse, action:{c = Main.elapsedTime;});
+	b.sendCollection(array.reverse, action:{c = Main.elapsedTime;});
 });
 )
-
-FloatArray
+(c-d);

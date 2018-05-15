@@ -27,6 +27,16 @@ void BufRev(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
 	}
 }
 
+void BufAdd(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
+{
+	float *data = buf->data;
+	int size = buf->samples;
+	float offset = msg->getf(0.0);
+
+	for (int i = 0; i < size; ++i)
+	data[i] += offset;
+}
+
 void BufGain(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
 {
 	float *data = buf->data;
@@ -199,9 +209,10 @@ void BufWaveSetCopyTo(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
 
 PluginLoad(OfflineBufferProcessesUGens) {
 	ft = inTable;
+	DefineBufGen("mul", BufGain);
+	DefineBufGen("add", BufAdd);
 	DefineBufGen("reverse", BufRev);
-	DefineBufGen("gain", BufGain);
-	DefineBufGen("chunkSwap", BufChunkSwap);
 	DefineBufGen("removeDC", BufRemoveDC);
+	DefineBufGen("chunkSwap", BufChunkSwap);
 	DefineBufGen("waveSetCopyTo", BufWaveSetCopyTo);
 }
