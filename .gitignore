@@ -1,2 +1,4 @@
 build
 **/.DS_Store
+release-packaging/OfflineBufferProcesses/classes
+release-packaging/OfflineBufferProcesses/plugins

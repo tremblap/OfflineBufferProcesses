@@ -103,30 +103,80 @@ c.chunkSwap(3,11,-3)
 c.getn(0,45, {|m| m.postln});
 
 ////////////////////////////////////////////////////////////
+// test in benchmarking
 1000.do({b.chunkSwap(b.numFrames.rand,b.numFrames.rand,(b.numFrames.rand-(b.numFrames/2)));})
-
+b.free
 
 b=Buffer.read(s,"/Volumes/trucs/archive - pièces PA/asinglewordisnotenough3(invariant).wav")
 b.play(true, 0.1)
 b.reverse
 
+
+Task.new({
+d = Main.elapsedTime;
+0.01.wait;
+50.do({b.reverse});
+}).play
+(c-d).postln
+
+
+
+(
+f = { |msg, time, replyAddr, recvPort|
+	    if(msg[0] == '/done') {
+		// "time done %s\n".postf( time, msg, replyAddr, recvPort )
+		c = time;
+    }
+};
+thisProcess.addOSCRecvFunc(f);
+d = Main.elapsedTime;
+45.do({b.reverse});
+)
+
+(c-d).postln
+
+// stop posting.
+thisProcess.removeOSCRecvFunc(f);
+
+
 ////////////////////////////////////////////////////////////
 //temp files version
-
+Buffer.freeAll
 // sets known values
+
 b = Buffer.alloc(s,16);
 b.setn(0, Array.series(16,1,1));
+b.getn(0,16, {|msg| msg.postln});
 
 b.loadToFloatArray(action: {
 	arg array;
-	array.postln;
-	x = array.reverse;
-	x.postln;
-	b.loadCollection(x);
+	b.loadCollection(array.reverse);
 });
 
 b.getn(0,16, {|msg| msg.postln});
 
+/////
+b=Buffer.read(s,"/Volumes/machins/professionnel/sons/boucle A(lent)/loopC.aif")
+b=Buffer.read(s,"/Volumes/trucs/archive - pièces PA/asinglewordisnotenough3(invariant).wav")
+b.play(true, 0.1)
 
-b = Buffer.read(s,"/Volumes/machins/--à archiver/démarche/BEAST-HOA+cheat/bounces/montage-17.wav")
-b.read("/Volumes/machins/--à archiver/démarche/BEAST-HOA+cheat/bounces/montage-17.wav",0,926100000
+(
+d = Main.elapsedTime;
+b.loadToFloatArray(action: {
+	arg array;
+	b.loadCollection(array.reverse, action:{c = Main.elapsedTime;});
+});
+)
+
+////////////////////////////
+// via osc (too slow for big file)
+(
+d = Main.elapsedTime;
+b.getToFloatArray(wait:1, timeout:30, action:{
+	arg array;
+	array.postln;
+	// b.sendCollection(array.reverse, action:{c = Main.elapsedTime;});
+});
+)
+
+FloatArray
