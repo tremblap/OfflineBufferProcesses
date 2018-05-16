@@ -61,7 +61,7 @@ void BufRemoveDC(World *world, struct SndBuf *buf, struct sc_msg_iter *msg)
 		prevout = previn;
 		for (int i = 1; i < frames; ++i) {
 			in = data[(i*chans)+j];
-			out = in - previn + 0.995 * prevout;
+			out = in - previn + coeff * prevout;
 			data[(i*chans)+j] = out;
 			prevout = out;
 			previn = in;

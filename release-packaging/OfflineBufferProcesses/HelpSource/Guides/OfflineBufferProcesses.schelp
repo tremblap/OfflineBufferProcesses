@@ -1,191 +1,184 @@
-title:: Buffer Writing Guide
-summary:: This section illustrates some case uses of writing to buffers
+title:: Offline Buffer Processing Guide
+summary:: This section illustrates some case uses of offline buffer processing
 categories:: UGens>Buffer
-related:: Classes/BufRd, Classes/BufWr, Classes/IBufWr
+related:: Classes/Buffer
 
 description::
 
-This section is a complement to the helpfiles of link::Classes/BufWr:: and link::Classes/IBufWr::, covering specific behaviours of both UGens.
+This section is a complement to the link::Classes/Buffer:: helpfile inasmuch as it will illustrate different ways to achieve the same result.footnote::
+This was made possible thanks to the FluCoMa project (http://www.flucoma.org/) funded by the European Research Council (https://erc.europa.eu/) under the European Union’s Horizon 2020 research and innovation programme (grant agreement No 725899).::
 
-subsection:: Multichannel Inputs to a Single Index
+subsection:: Motivations
 
-Both link::Classes/BufWr:: and link::Classes/IBufWr:: behave the same way, which is to NOT multichannel expand its input, instead passing the input array as is to the UGen. What that means is that the first input can be an array of up to the same size as the number of channels in the buffer it points to. The index (phase) of the buffer these values will be written to is the same for all.
+At times, one might want to process a buffer in-place (overwriting its own values) or out-of-place (writing in another buffer) much faster than real-time. SuperCollider offers some built-in link::Classes/Buffer:: instance methods to do so directly on the server, and some have been added by plugins, calling the b_gen functions. Another way is to pass the buffer to the language size as a link::Classes/FloatArray:: Examples of both practice will be illustrated below with efficiency comparison.
 
-strong::Example 1: Basic Stereo Buffer Writing::
-code::
-// allocate a stereo buffer
-c = Buffer.alloc(s, s.sampleRate,2);
 
-(
-{
-	BufWr.ar( // built-in buffer writer, since we won't skip indices
-		Phasor.ar(0, [1, 0.5] , 0, c.numFrames), // basic source, multichannel expanded to 2 different ramps
-		c.bufnum,
-		Phasor.ar(0, 1 , 0, c.numFrames),
-	);
-	BufRd.ar(
-		2,
-		c.bufnum,
-		Phasor.ar(0, 1 , 0, c.numFrames),// reading at one sample per sample
-		0,
-		1
-	);
-}.plot(0.1)
-)
-::
+subsection:: The 3 Methods, Compared.
 
-strong::Example 2: Common Error, too large an input array::
-code::
-// allocate a stereo buffer
-c = Buffer.alloc(s, s.sampleRate,2);
+Let's say we want to reverse the content of a buffer. There are 3 ways to do it: list::
+##using a custom, server-side ugen (see the list below of the available functions built-in and added)
+##transfering back and forth to the language side via a temporary file to disk
+##transfering back and forth to the language side via OSC::
 
-(
-// this code will try to write a larger array than the number of channels in the buffer
-{
-	BufWr.ar( // built-in buffer writer, since we won't skip indices
-		Phasor.ar(0, [1, 0.5, 2] , 0, c.numFrames), // basic source, multichannel expanded to 3 different ramps
-		c.bufnum,
-		Phasor.ar(0, 1 , 0, c.numFrames),
-	);
-}.plot(0.1)
-)
-// check the Post Window, you get told off!
-::
+We will present the same simple code below doing the same task, and devise a list of pros and cons for each method.
 
-strong::Example 3: Common Error, multichannel expansion of the index (phase) input::
-code::
-// this code will try to multichannel expand the index(phase) input.
-// allocate a stereo buffer
-c = Buffer.alloc(s, s.sampleRate,2);
+strong::Method 1: server-side b_gen calls::
 
-(
-{
-	BufWr.ar( // built-in buffer writer, since we won't skip indices
-		Phasor.ar(0, [1, 2] , 0, c.numFrames), // basic source, multichannel expanded to 2 different ramps
-		c.bufnum,
-		Phasor.ar(0, [1, 2] , 0, c.numFrames), // trying two different rates of writing, same speed per input
-	);
-	BufRd.ar(
-		2,
-		c.bufnum,
-		Phasor.ar(0, 1 , 0, c.numFrames),// reading at one sample per sample
-		0,
-		1
-	);
-}.plot(0.1)
-) // if that was working we would expect 2 parallel lines, the 2nd perforated since we skip at the same speed than the values...
-::
-
-subsection:: The Main Differences between BufWr and IBufWr
-
-The helpfile of link::Classes/IBufWr:: explains clearly the need of a buffer writing UGen that would not leave unfilled indices should the index(phase) input was not contiguous, and illustrates it with classic musical examples. The addition of the interpolating filling has a few consequences on slight different behaviours between the objects, namely variable CPU taxing, a one-sample lag, and the need of a pausing mechanism.
-
-strong:: Variable CPU taxing::
-
-link::Classes/IBufWr:: needs to check if there is an index or more that has been skipped, which implies some branching in the code, which takes CPU time. Even at one-sample-per-sample writing speed, it is less efficient than link::Classes/BufWr:: because of that check.
+One can use one of the few special buffer instance methods called via the b_gen OSC command. See the link::Reference/Server-Command-Reference:: for the list of built-in task, and/or in the next subsection for an extended list.
 
 code::
-// declare a buffer
-b = Buffer.alloc(s, s.sampleRate);
+s.boot;
+// load a buffer, and play it in loop
+b=Buffer.read(s,Platform.resourceDir +/+ "sounds/a11wlk01.wav", action:{b.play(true,0.1)})
 
-// declares a Synth for each writing UGen with potential writing rates
+//benchmarking
 (
-SynthDef(\testBufWr,{
-	arg rate = 1;
-	var source = SinOsc.ar(200,0,0.0001);
-	var write_index = Phasor.ar(0, rate , 0, b.numFrames);
-	BufWr.ar(source, b.bufnum, write_index);
-	Out.ar(0,BufRd.ar(1,b.bufnum,write_index,0, 1));
-}).send;
-
-SynthDef(\testIBufWr,{
-	arg rate = 1, interp = 0;
-	var source = SinOsc.ar(200,0,0.0001);
-	var write_index = Phasor.ar(0, rate , 0, b.numFrames);
-	IBufWr.ar(source, b.bufnum, write_index, interp);
-	Out.ar(0,BufRd.ar(1,b.bufnum,write_index,0, 1));
-}).send;
+//sets a responder to \b_gen, to get a timestamp the end of the game
+f = { |msg, time, replyAddr, recvPort|
+	    if(msg[0] == '/done') {
+		c = time;
+    }
+};
+thisProcess.addOSCRecvFunc(f);
+//grabs the startup time
+d = Main.elapsedTime;
+//do a 101 reversing - this will glitch
+101.do({b.reverse});
 )
 
-//create 100 instances of BufWr, observe the server CPU
+// then removes the responder, and tells you how long it takes
 (
-b.zero;
-g = Group.new;
-100.do({Synth(\testBufWr , target:g)});
+thisProcess.removeOSCRecvFunc(f);
+(c-d);
 )
 
-// Free them
-g.free
-
-//create 100 instances of IBufWr with no interpolation, simply sampling-and-holding between skipped indices, observe the server CPU
-(
-b.zero;
-g = Group.new;
-100.do({Synth(\testIBufWr , target:g)})
-)
-
-// worse by about 40%. Free them.
-g.free
-
-
-//create 100 instances of BufWr writing 10 times faster than realtime, observe the server CPU
-(
-b.zero;
-g = Group.new;
-100.do({Synth(\testBufWr, [\rate, 10], g)})
-)
-// not much has changed since nothing more is done
-g.free
-
-//create 100 instances of IBufWr writing 10 times faster than realtime, still only S&H, observe the server CPU
-(
-b.zero;
-g = Group.new;
-100.do({Synth(\testIBufWr, [\rate, 10], g)})
-)
-// now the 10 sample writing per sample start to hit the performance
-g.free
-
-//create 100 instances of IBufWr writing 10 times faster than realtime, this time with linear interpolation, observe the server CPU
-(
-b.zero;
-g = Group.new;
-100.do({Synth(\testIBufWr, [\rate, 10, \interp, 1], g)})
-)
-// now the interpolation hits even more.
-g.free
+// clean
+b.free;
 ::
 
-strong:: 1 sample late::
+Pros:
+list::
+##The fastest method by far.
+::
 
-The way link::Classes/IBufWr:: interpolates is by making the difference between indices. What this implies is that at the end of a vector, the known value of the last sample will not be known until the first value of the next vector. In a code where the writing happens right before the playing, it creates a whole in the output. The discriminating ear will have heard that in the previous examples above. This is in fact written as soon as possible, as one can see in the example below:
+Cons:
+list::
+##Limited to the list of methods below
+##Not easy to know when it is done without a custom OSC responder
+##Does not have the capacity to generate new buffers of the right size
+::
+
+test
+
+strong::Method 2: using sclang's FloatArray via a temporary file ::
+
+A more flexible, albeit slower method, is to send the Buffer to a FloatArray on the language side, process it, then send it back via another temporary file. All the file handling (creation, load, deletion) is managed by the Buffer instance methods used.
 
 code::
-b = Buffer.alloc(s, 200);
+s.boot;
+// load a buffer, and play it in loop
+b=Buffer.read(s,Platform.resourceDir +/+ "sounds/a11wlk01.wav", action:{b.play(true,0.1)})
+
 (
-b.zero;
-{
-	IBufWr.ar(
-		Phasor.ar(0, 1 , 0, b.numFrames),// writing values, incremented one sample per sample
-		b.bufnum,
-		Phasor.ar(0, 1 , 0, b.numFrames),// writes one sample per sample
-		1,
-		0.5
-	);
-	BufRd.ar(
-		1,
-		b.bufnum,
-		Phasor.ar(0, 1 , 0, b.numFrames),
-		0,
-		1
-	);
-}.plot(130/44100)
+// grabs the start time
+d = Main.elapsedTime;
+// loads to a FloatArray
+b.loadToFloatArray(action: {
+	arg array;
+	//processes the array once it is loaded, then sends it back
+	b.loadCollection(array.reverse, action:{c = Main.elapsedTime;});
+});
 )
-// the plot shows playback holes at the end of buffer
-// but if the buffer is drawn, there are no wholes!
-b.plot
+//time to do it once
+(c-d);
+
+// clean
+b.free;
 ::
 
-strong::negative index::
+Pros:
+list::
+##much wider range of data manipulation available than on the buffer side
+::
+Cons:
+list::
+##much slower, especially if there are a lot of back and forth with a large buffer
+::
 
-A feature of link::Classes/IBufWr:: is that the writing can be paused at any time, by providing negative indices. Once the writing starts again, the first index is not interpolated from the previous positive entry.
+strong::Method 3: using sclang's FloatArray via OSC::
+
+Similar to Method 2 above, but instead, using many OSC messages to pass the buffer back and forth.
+
+code::
+s.boot;
+// load a buffer, and play it in loop
+b=Buffer.read(s,Platform.resourceDir +/+ "sounds/a11wlk01.wav", action:{b.play(true,0.1)})
+
+(
+// grabs the start time
+d = Main.elapsedTime;
+// loads to a FloatArray
+b.getToFloatArray(action: {
+	arg array;
+	//processes the array once it is loaded, then sends it back
+	b.sendCollection(array.reverse, action:{c = Main.elapsedTime;});
+});
+)
+//time to do it once
+(c-d);
+
+// clean
+b.free;
+::
+
+Pros:
+list::
+##Allows to pass data to non-local servers
+::
+Cons:
+list::
+##The slowest of all method by far
+##Limited to very small buffer sizes before cluttering.
+::
+
+subsection:: A commented list of available server-based buffer offline process methods, excluding the allocators, freers, and file readers and writers.
+
+See the link::Classes/Buffer:: helpfile for further details of use, arguments, etc.
+
+emphasis::Setting the Buffer values:::
+DEFINITIONLIST::
+##.zero
+||zeros all values of the buffer
+##.fill
+||fills sections of the buffer with constant values
+##.sine1 / .sine2 / .sine3
+||fills the buffer with different components of additive synthesis
+##.cheby
+||fills the buffer with a series of Chebyshev polynomials
+::
+
+emphasis::Changing the Buffer values:::
+DEFINITIONLIST::
+##.normalize
+||changes the gain to fit the highest absolute value to the argument (default: 1)
+##.add
+||adds an offset to the value of each sample (default: 0)
+##.mul
+||multiplies each sample by the gain (default: -1)
+##.removeDC
+||applies a one-pole high-pass filter to remove any DC offset, preserving the separate channels
+
+::
+
+emphasis::Reordering the Buffer content:::
+DEFINITIONLIST::
+##.reverse
+||swaps the order of samples in the buffer, from the end to the start, preserving the separate channels
+##.copyData
+||copies section of the buffer to a section of another buffer (or to another part of itself)
+##.chunkSwap
+||allows to move chunks of contiguous frames within a buffer, preserving the separate channels
+##.waveSetCopyTo
+||allows to copy complete wavesets to a destination buffer, preserving the separate channels
+::
+

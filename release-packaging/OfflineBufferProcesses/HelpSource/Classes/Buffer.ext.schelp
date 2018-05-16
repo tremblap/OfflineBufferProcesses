@@ -1,0 +1,277 @@
+INSTANCEMETHODS::
+
+SUBSECTION:: Other methods
+
+METHOD:: add
+This method adds a constant (offset) to all the buffer's values.
+
+ARGUMENT:: offset
+The amount by which the values will be offset.
+
+METHOD:: mul
+This method multiplies all the buffer's values by a constant (gain).
+ARGUMENT:: gain
+The amount by which the values will be multiplied.
+
+DISCUSSION::
+
+CODE::
+s.boot;
+// allocates a 16-sample buffer and fills it with ascending values
+b = Buffer.alloc(s,16);
+b.setn(0, Array.series(16,1,1));
+
+// read to check
+b.getn(0,16, {|msg| msg.postln});
+
+// apply gain
+b.mul(-0.1)
+// read to check (and appreciate the imprecision of 32bit float)
+b.getn(0,16, {|msg| msg.postln});
+
+// apply offset
+b.add(0.1)
+// read to check
+b.getn(0,16, {|msg| msg.postln});
+
+// clean up
+b.free
+::
+
+METHOD:: removeDC
+This method applies a one-pole high-pass filter to the whole buffer content. It uses the same function described in link::Classes/LeakDC::.
+
+ARGUMENT:: coef
+The coefficient of the filter.
+
+DISCUSSION::
+
+CODE::
+s.boot;
+//load a file
+b=Buffer.read(s,Platform.resourceDir +/+ "sounds/a11wlk01.wav")
+
+// add DC for testing purpose
+b.add(0.1);
+
+// play (beware of the nasty tick at the end) and plot (observe the wave being offset)
+b.play; b.plot;
+
+// remove DC
+b.removeDC;
+
+// play (clean ending) and plot (well centered)
+b.play; b.plot;
+
+// clean up
+b.free
+::
+
+METHOD:: reverse
+This method swaps the values from the last to the first one, as if read backwards.
+
+code::
+//load a file, and play it
+b=Buffer.read(s,Platform.resourceDir +/+ "sounds/a11wlk01.wav", action:{b.play(true,0.1)})
+
+// reverse it (fun glitch happens when the values are updated!)
+b.reverse;
+::
+
+METHOD:: chunkSwap
+This method allows to move chunks/portions of contiguous frames within a buffer, whilst respecting the channel order.
+
+ARGUMENT:: srcStartAt
+The source start frame number, counting from 0. By default, it starts at the beginning.
+
+ARGUMENT:: dstStartAt
+The destination start frame number. By default, it starts at the end. -1 seeks that value automatically.
+
+ARGUMENT:: numFrames
+The number of frames to copy. By default is half the buffer size. 0 finds that valueautomatically. If numFrames is positive, the writing happens upwards of the dstStartAt. If it is negative, it writes backwards from there.
+
+discussion::
+strong:: Didactic examples:::
+code::
+s.boot;
+// allocates a 16-sample buffer and fills it with ascending values
+b = Buffer.alloc(s,16);
+b.setn(0, Array.series(16,0,1));
+
+// read to check
+b.getn(0,16, {|msg| msg.postln});
+
+// apply chunkSwap method with default values (same as reverse)
+b.chunkSwap
+
+// read to check
+b.getn(0,16, {|msg| msg.postln});
+
+// apply on full range = changes nothing!
+b.chunkSwap(0,b.numFrames-1,(b.numFrames * -1))
+
+// read to check - tada!
+b.getn(0,16, {|msg| msg.postln});
+
+// reset to ascending values
+b.setn(0, Array.series(16,0,1));
+
+// apply with other values - indices are counting from 0, swaping 3 frames forward from 3 and 7.
+b.chunkSwap(3,7,3)
+
+// read to check
+b.getn(0,16, {|msg| msg.postln});
+
+// reset to ascending values
+b.setn(0, Array.series(16,0,1));
+
+// apply with negative quantities (will read backwards and write frontwards)
+b.chunkSwap(3,11,-3)
+
+// read to check (and meditate on the result)
+b.getn(0,16, {|msg| msg.postln});
+
+// trying odd channel count
+c = Buffer.alloc(s,15,3)
+c.setn(0,Array.series(45,0,1))
+c.getn(0,45, {|m| m.postln});
+
+// same as the mono example above, and respecting the interleaved channels
+c.chunkSwap(3,7,3)
+c.getn(0,45, {|m| m.postln});
+
+// reset
+c.setn(0,Array.series(45,0,1))
+
+// same as the negative numFrames mono example above
+c.chunkSwap(3,11,-3)
+c.getn(0,45, {|m| m.postln});
+
+// clean up
+b.free; c.free
+::
+
+strong:: A more (fun) musical example:::
+
+code::
+s.boot;
+//load a file, and play it
+//(Use a longer articulated track for more musically potent results)
+b=Buffer.read(s,Platform.resourceDir +/+ "sounds/a11wlk01.wav", action:{b.play(true,0.1)})
+
+// auto-glitch-scrambler - on longer buffers, augment the number of iterations for more fun.
+// Note that chunkSwap is well behaved and tell you off in the post window when the random values inadvertently cross the buffer's boundaries.
+10.do({b.chunkSwap(b.numFrames.rand,b.numFrames.rand,(b.numFrames.rand-(b.numFrames/2)));})
+
+// clean up
+b.free;
+::
+
+METHOD:: waveSetCopyTo
+This method is a simple implementation of Trevor Wishart's idea of waveset, defined as the samples between two ascending zero-crossings. This current implementation copies complete wavesets to a destination buffer, and can duplicate the sets as it does so, in effect doing a blunt non-overlaping, variable-grain-sized time-stretching. It acts on each channel of the buffer independently, but requires matching channel count between the source and destination buffer.
+
+ARGUMENT::dstBuf
+The destination buffer. It must match the source buffer in channel count.
+
+ARGUMENT::repetitions
+The number of times each complete waveset should be duplicated. If the repetitions are set to 0, the method will try to put as many repetition as possible in the destination buffer.
+
+DISCUSSION::
+
+strong:: Didactic examples:::
+
+CODE::
+s.boot;
+// copying a sine as many time it can - first attempt
+
+//create a one-cycle buffer
+b = Buffer.alloc(s,256);
+b.sine1([1],true,false);
+b.plot;
+
+//create a buffer that would contain almost 4 of them, then copy the waveset
+c = Buffer.alloc(s,1000);
+b.waveSetCopyTo(c)
+
+//check
+c.plot
+
+//nothing... because a single cycle does not zero-cross twice and therefore is not a complete waveset!
+
+// copying a sine as many time it can - second attempt
+
+// create a one-and-a-bit-cycle buffer
+b = Buffer.alloc(s,256);
+b.sine2([1.01],[1],true,false);
+b.plot;
+
+//create a buffer that would contain almost 4 of them, then copy the waveset
+c = Buffer.alloc(s,1000);
+b.waveSetCopyTo(c)
+
+//check
+c.plot
+
+//only 3, because the default value does a simple division of dstBufNumFrames / srcBufNumBufFrames
+//since we know it should fit 4 times, requesting it
+c.zero
+b.waveSetCopyTo(c,4)
+c.plot
+
+//nothing is copied. That is because it does not fit completely, so it does not half-do the job.
+
+//resynthesis the source buffer with a slightly shorter wavelenght
+b.sine2([256/250],[1],true,false);
+b.waveSetCopyTo(c,4)
+c.plot
+//Voilà!
+
+// clean up
+b.free; c.free
+::
+
+strong:: More musical examples:::
+
+CODE::
+s.boot;
+//fun audio example 1 - dirty FOF-ish
+//define the source and the oscillating buffer
+b = Buffer.alloc(s,256);
+b.sine2([1.01],[1],true,false);
+c = Buffer.alloc(s,1000);
+
+// start the playback - silent
+c.play(true,0.1)
+
+// change the buffer content with 1 cycle at the front...
+(
+c.zero;
+b.waveSetCopyTo(c,1);
+)
+//... or 2
+(
+c.zero;
+b.waveSetCopyTo(c,2);
+)
+// clean up
+b.free; c.free
+
+////////////////////////////////////
+//fun audio example 2 - basic stretch
+
+// read a soundfile you like
+b=Buffer.read(s,Platform.resourceDir +/+ "sounds/a11wlk01.wav");
+
+// define a destination buffer 17 times longer than the source, same channel count
+c = Buffer.alloc(s,b.numFrames*17,b.numChannels)
+
+// waveset stretch it to twice the lenght
+b.waveSetCopyTo(c,2)
+c.play
+// boring. Stretch it to 17 times is more fun
+b.waveSetCopyTo(c,17)
+c.play
+
+// clean up
+b.free; c.free
+::

@@ -12,6 +12,6 @@ This was made possible thanks to the FluCoMa project (http://www.flucoma.org/) f
 3. Enjoy!
 
 ###### How to get started
-The fact that this package extends the native Buffer class complicates helpfile writing. The different methods are presented in the Guide entitled 'OfflineBufferProcesses' which also explains other methods to do similar tasks.
+The fact that this package extends the native Buffer class means that the different instance methods will be documented in the Buffer helpfile. There is also a Guide entitled 'OfflineBufferProcesses' which explains other methods to do similar tasks.
 
 Comments, suggestions and bug reports are welcome.
