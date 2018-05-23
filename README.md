@@ -4,8 +4,6 @@ v.1 by Pierre Alexandre Tremblay (2018)
 #### Description
 This is a set of offline buffer processes for SuperCollider (https://supercollider.github.io/) augmenting the Buffer class with new instance methods. This project, especially the first few commits of the repository, can be used to understand how to write such process in C.
 
-This was made possible thanks to the FluCoMa project (http://www.flucoma.org/) funded by the European Research Council (https://erc.europa.eu/) under the European Union’s Horizon 2020 research and innovation programme (grant agreement No 725899)
-
 #### How to Install from binaries (SC 3.8 or 3.9 on Mac required)
 Download the package and read the text file.
 
@@ -22,3 +20,8 @@ These instructions are modified from the amazingly streamlined UGen writing tuto
 6. once it is done, install the Ugen and its Declaration by moving them in the `release-packaging/OfflineBufferProcesses/classes` and 'release-packaging/OfflineBufferProcesses/plugins' respectively, then move the whole `OfflineBufferProcesses` folder in your `Extensions` folder.
 
 #### Enjoy! Comments, suggestions and bug reports are welcome.
+
+###### Acknowledgements
+This toolset made possible thanks to the FluCoMa project (http://www.flucoma.org/) funded by the European Research Council (https://erc.europa.eu/) under the European Union’s Horizon 2020 research and innovation programme (grant agreement No 725899)
+
+Thanks to Gerard Roma, Owen Green, and Sam Pluta for their input.
