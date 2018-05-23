@@ -79,7 +79,7 @@ b.reverse;
 ::
 
 METHOD:: chunkSwap
-This method allows to move chunks/portions of contiguous frames within a buffer, whilst respecting the channel order.
+This method moves chunks/portions of contiguous frames within a buffer, whilst respecting the channel order.
 
 ARGUMENT:: srcStartAt
 The source start frame number, counting from 0. By default, it starts at the beginning.

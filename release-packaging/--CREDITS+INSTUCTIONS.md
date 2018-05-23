@@ -16,23 +16,23 @@ The fact that this package extends the native Buffer class means that the new in
 
 The new methods are:
 
-.add
+.add(offset)
   adds an offset to the value of each sample (default: 0)
 
-.mul
+.mul(gain)
   multiplies each sample by the gain (default: -1)
 
-.removeDC
-  applies a one-pole high-pass filter to remove any DC offset, preserving the separate channels
+.removeDC(coefficient)
+  applies a one-pole high-pass filter of the given coefficient o remove any DC offset, preserving the separate channels
 
 .reverse
   swaps the order of samples in the buffer, from the end to the start, preserving the separate channels
 
-.chunkSwap
-  allows to move chunks of contiguous frames within a buffer, preserving the separate channels
+.chunkSwap(srcStartAt = 0, dstStartAt = -1, numFrames = 0)
+  moves chunks of contiguous frames within a buffer, preserving the separate channels
 
-.waveSetCopyTo
-  allows to copy complete wavesets to a destination buffer, preserving the separate channels
+.waveSetCopyTo(dstBuf, repetitions)
+  copies complete wavesets to a destination buffer, preserving the separate channels
 
 A quick example of use in SuperCollider code would look like this:
 
