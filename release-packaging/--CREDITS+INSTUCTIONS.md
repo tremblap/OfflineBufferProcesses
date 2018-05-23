@@ -12,6 +12,42 @@ This was made possible thanks to the FluCoMa project (http://www.flucoma.org/) f
 3. Enjoy!
 
 #### How to get started
-The fact that this package extends the native Buffer class means that the different instance methods will be documented in the Buffer helpfile. There is also a Guide entitled 'OfflineBufferProcesses' which explains and compares other methods to do similar tasks.
+The fact that this package extends the native Buffer class means that the new instance methods will be documented in the Buffer helpfile.
+
+The new methods are:
+
+.add
+  adds an offset to the value of each sample (default: 0)
+
+.mul
+  multiplies each sample by the gain (default: -1)
+
+.removeDC
+  applies a one-pole high-pass filter to remove any DC offset, preserving the separate channels
+
+.reverse
+  swaps the order of samples in the buffer, from the end to the start, preserving the separate channels
+
+.chunkSwap
+  allows to move chunks of contiguous frames within a buffer, preserving the separate channels
+
+.waveSetCopyTo
+  allows to copy complete wavesets to a destination buffer, preserving the separate channels
+
+A quick example of use in SuperCollider code would look like this:
+
+```
+s.boot;
+//load a file, and play it
+b=Buffer.read(s,Platform.resourceDir +/+ "sounds/a11wlk01.wav", action:{b.play(true,0.1)})
+
+// auto-glitch-scrambler
+10.do({b.chunkSwap(b.numFrames.rand,b.numFrames.rand,(b.numFrames.rand-(b.numFrames/2)));})
+
+// clean up
+b.free;
+```
+
+The Buffer helpfile has complete documentation of all methods with many examples. There is also a Guide entitled 'OfflineBufferProcesses' which explains and compares other methods to do similar tasks. You can find it by searching the SuperCollider help browser.
 
 Comments, suggestions and bug reports are welcome.
